@@ -10,17 +10,22 @@ import traceback
 from ipaddress import IPv4Network, collapse_addresses
 
 
-def fetch_cn_net():
-    if os.path.exists('delegated-apnic-latest'):
-        with open('delegated-apnic-latest', 'r') as f:
-            data = f.read()
+def fetch_file(local, remote):
+    if os.path.exists(local):
+        with open(local, 'r') as f:
+            return f.read()
     else:
-        url = 'http://ftp.apnic.net/apnic/stats/apnic/delegated-apnic-latest'
-        res = requests.get(url)
-        if res.status_code != 200:
+        res = requests.get(remote)
+        if res.status_code == 200:
+            return res.text
+        else:
             print("request error")
-            return
-        data = res.text
+            return ''
+
+
+def fetch_cn_net():
+    data = fetch_file('delegated-apnic-latest',
+        'http://ftp.apnic.net/apnic/stats/apnic/delegated-apnic-latest')
 
     cnregex = re.compile(r'^apnic\|cn\|ipv4\|[\d\.]+\|\d+\|\d+\|a\w*$',
                          re.I | re.M)
@@ -33,24 +38,22 @@ def fetch_cn_net():
         number = int(parts[4])
         cidr = 32 - int(math.log(number, 2))
         networks.append(IPv4Network((start, cidr)))
-
     return networks
 
 
-def fetch_direct_net():
+def fetch_direct_networks():
     with open('direct-networks.txt', 'r') as f:
         data = f.read()
     lines = data.splitlines()
 
     networks = []
     for line in lines:
-        if (line == ''):
+        if line == '':
             continue
         parts = line.split('/')
         start = parts[0]
         cidr = int(parts[1])
         networks.append(IPv4Network((start, cidr)))
-
     return networks
 
 
@@ -66,23 +69,43 @@ def format_net(networks):
     return json.dumps(results)
 
 
-def fetch_format_suffixes():
-    # Generated from dnsmasq-china-list
-    with open('direct-suffixes.txt') as f:
+def fetch_china_list():
+    data = fetch_file('accelerated-domains.china.conf',
+        'https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/accelerated-domains.china.conf')
+    lines = data.splitlines()
+
+    results = []
+    for line in lines:
+        if line == '' or line[0] == '#':
+            continue
+        parts = line.split('/')
+        results.append(parts[1])
+    return results
+
+
+def fetch_direct_domains():
+    with open('direct-domains.txt', 'r') as f:
         data = f.read()
     lines = data.splitlines()
 
-    results = {}
+    results = []
     for line in lines:
-        if (line == ''):
+        if line == '':
             continue
+        results.append(line)
+    return results
+
+
+def format_suffixes(domains):
+    results = {}
+    for line in domains:
         parts = line.split('.')
         level = results
         while True:
             part = parts.pop()
             isLast = len(parts) == 0
             if (level == 1) or (isLast and part in level):
-                print(f"WARN: Suffix duplicated: {line} => {part} = {level}")
+                print(f"WARN: Suffix duplicated: {line} => {part}")
                 break
             if isLast:
                 level[part] = 1
@@ -90,7 +113,6 @@ def fetch_format_suffixes():
             if part not in level:
                 level[part] = {}
             level = level[part]
-
     return json.dumps(results)
 
 
@@ -100,13 +122,16 @@ def generate():
 
     # Networks
     nets = []
-    nets.extend(fetch_direct_net())
+    nets.extend(fetch_direct_networks())
     nets.extend(fetch_cn_net())
     netstr = format_net(nets)
     pac = pac.replace('{DirectNetworks}', netstr)
 
     # Domain
-    suffixes = fetch_format_suffixes()
+    domains = []
+    domains.extend(fetch_direct_domains())
+    domains.extend(fetch_china_list())
+    suffixes = format_suffixes(domains)
     pac = pac.replace('{DirectSuffixes}', suffixes)
 
     with open('proxy.pac', 'w') as f:
