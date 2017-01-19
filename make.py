@@ -137,4 +137,6 @@ def generate():
     with open('proxy.pac', 'w') as f:
         f.write(pac)
 
-generate()
+
+if __name__ == '__main__':
+    generate()
