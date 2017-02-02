@@ -14,7 +14,7 @@ function isIPv4(host) {
 function isInNets(nets, host) {
     var ip = convert_addr(host);
     for (var i = 24; i >= 8; i--) {
-        var key = (ip >> i) + '/' + (32 - i);
+        var key = (ip >>> i) + '/' + (32 - i);
         if (hasOwnProperty.call(nets, key))
             return true;
     }
