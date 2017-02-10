@@ -36,6 +36,9 @@ function isSuffixes(suffixes, host) {
 }
 
 function FindProxyForURL(url, host) {
+    if (isPlainHostName(host)) {
+        return direct;
+    }
     if (isIPv4(host)) {
         if (isInNets(DirectNetworks, host))
             return direct;
@@ -49,10 +52,10 @@ function FindProxyForURL(url, host) {
 // DEBUG CODE
 // function convert_addr(ipchars) {
 //     var bytes = ipchars.split('.');
-//     var result = (bytes[0] << 24) |
-//     (bytes[1] << 16) |
-//     (bytes[2] << 8) |
-//     (bytes[3]);
+//     var result = (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | (bytes[3]);
 //     return result >>> 0;
+// }
+// function isPlainHostName(host) {
+//     return host.indexOf('.') === -1
 // }
 // module.exports = FindProxyForURL
