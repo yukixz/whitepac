@@ -6,6 +6,12 @@ var DirectSuffixes = {DirectSuffixes};
 
 var hasOwnProperty = Object.hasOwnProperty;
 
+function convert_addr(ipchars) {
+    var bytes = ipchars.split('.');
+    var result = (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | (bytes[3]);
+    return result >>> 0;
+}
+
 var reIPv4 = /^\d+\.\d+\.\d+\.\d+$/;
 function isIPv4(host) {
     return reIPv4.test(host);
@@ -50,11 +56,6 @@ function FindProxyForURL(url, host) {
 }
 
 // DEBUG CODE
-function convert_addr(ipchars) {
-    var bytes = ipchars.split('.');
-    var result = (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | (bytes[3]);
-    return result >>> 0;
-}
 // function isPlainHostName(host) {
 //     return host.indexOf('.') === -1
 // }
