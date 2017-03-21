@@ -23,13 +23,13 @@ function isInNets(nets, host) {
 
 function isSuffixes(suffixes, host) {
     var parts = host.split('.');
-    var level = suffixes;
+    var node = suffixes;
     for (var i = parts.length - 1; i >= 0; i--) {
         var part = parts[i];
-        level = level[part];
-        if (level === undefined)
+        node = node[part];
+        if (node === undefined)
             return false
-        if (level === 1)
+        if (node === 1)
             return true
     }
     return false;
@@ -50,11 +50,11 @@ function FindProxyForURL(url, host) {
 }
 
 // DEBUG CODE
-// function convert_addr(ipchars) {
-//     var bytes = ipchars.split('.');
-//     var result = (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | (bytes[3]);
-//     return result >>> 0;
-// }
+function convert_addr(ipchars) {
+    var bytes = ipchars.split('.');
+    var result = (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | (bytes[3]);
+    return result >>> 0;
+}
 // function isPlainHostName(host) {
 //     return host.indexOf('.') === -1
 // }
