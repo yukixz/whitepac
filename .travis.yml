@@ -10,3 +10,7 @@ deploy:
   github_token: $GITHUB_TOKEN
   on:
     branch: master
+notifications:
+  email:
+    on_success: never
+    on_failure: always
