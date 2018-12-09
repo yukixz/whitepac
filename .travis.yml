@@ -1,0 +1,16 @@
+language: python
+python:
+  - "3.6"
+cache: pip
+install: "pip install requests"
+script: python make.py
+deploy:
+  provider: pages
+  skip_cleanup: true
+  github_token: $GITHUB_TOKEN
+  on:
+    branch: master
+notifications:
+  email:
+    on_success: never
+    on_failure: always
